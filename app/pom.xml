@@ -1,0 +1,427 @@
+<!--
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>Kintsugi3D</groupId>
+        <artifactId>Kintsugi3DBuilder</artifactId>
+        <version>1.7.0</version>
+    </parent>
+    <artifactId>app</artifactId>
+
+    <packaging>jar</packaging>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>1.12</version>
+                <executions>
+                    <execution>
+                        <id>timestamp-property</id>
+                        <goals>
+                            <goal>timestamp-property</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <name>current.year</name>
+                            <pattern>yyyy</pattern>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <transformers>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                            <mainClass>kintsugi3d.app.Kintsugi3DBuilder</mainClass>
+                        </transformer>
+                        <transformer implementation="com.github.edwgiz.mavenShadePlugin.log4j2CacheTransformer.PluginsCacheFileTransformer" />
+                    </transformers>
+                    <shadedArtifactAttached>true</shadedArtifactAttached>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <!--suppress MavenModelInspection -->
+                        <groupId>com.github.edwgiz</groupId>
+                        <!--suppress MavenModelInspection -->
+                        <artifactId>maven-shade-plugin.log4j2-cachefile-transformer</artifactId>
+                        <!--suppress MavenModelInspection -->
+                        <version>2.6.1</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>com.googlecode.maven-download-plugin</groupId>
+                <artifactId>download-maven-plugin</artifactId>
+                <version>1.13.0</version>
+                <executions>
+                    <!-- Download JRE -->
+                    <execution>
+                        <id>download-jre</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>
+                                https://api.adoptium.net/v3/binary/latest/${java.version}/ga/${jre.os}/${jre.arch}/jre/hotspot/normal/eclipse
+                            </url>
+                            <outputDirectory>
+                                ${project.build.directory}
+                            </outputDirectory>
+                            <outputFileName>jre.tar.gz</outputFileName>
+                        </configuration>
+                    </execution>
+                    <!-- Download latest published build of Kinsugi 3D Viewer -->
+                    <execution>
+                        <id>download-viewer</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>wget</goal>
+                        </goals>
+                        <configuration>
+                            <url>
+                                https://github.com/UWStout/Kintsugi3DViewer/releases/download/v${viewer.version}/Kintsugi3DViewer-${viewer.os}.zip
+                            </url>
+                            <outputDirectory>
+                                ${project.build.directory}
+                            </outputDirectory>
+                            <outputFileName>Kintsugi3DViewer.zip</outputFileName>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <!-- Unzip JRE - explicitly invoking tar so that we can use strip-components  -->
+                    <execution>
+                        <id>unpack-jre</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <delete dir="${project.build.directory}/jre"/>
+                                <mkdir dir="${project.build.directory}/jre"/>
+                                <exec executable="tar" failonerror="true">
+                                    <arg value="-xzf"/>
+                                    <arg value="${project.build.directory}/jre.tar.gz"/>
+                                    <arg value="--strip-components=1"/>
+                                    <arg value="-C"/>
+                                    <arg value="${project.build.directory}/jre"/>
+                                </exec>
+                                <delete file="${project.build.directory}/jre.tar.gz"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                    <!-- Unzip Kintsugi 3D Viewer -->
+                    <execution>
+                        <id>unpack-viewer</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <target>
+                                <unzip
+                                        src="${project.build.directory}/Kintsugi3DViewer.zip"
+                                        dest="${project.build.directory}/viewer"
+                                />
+                                <chmod
+                                        file="${project.build.directory}/viewer/Kintsugi 3D Viewer.app/Contents/MacOS/Kintsugi 3D Viewer"
+                                        perm="755"
+                                />
+                                <delete file="${project.build.directory}/Kintsugi3DViewer.zip"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Configure which test classes should run. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.6</version>
+                <configuration>
+                    <includes>
+                        <include>**/SmokeTest.class</include>
+                    </includes>
+                    <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+                </configuration>
+            </plugin>
+        </plugins>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/kintsugi3d-builder-about.txt</include>
+                    <include>**/Info.plist</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>**/kintsugi3d-builder-about.txt</exclude>
+                    <exclude>**/Info.plist</exclude>
+                </excludes>
+            </resource>
+        </resources>
+    </build>
+    <profiles>
+        <profile>
+            <id>macos</id>
+            <activation>
+                <os>
+                    <family>mac</family>
+                </os>
+            </activation>
+            <build>
+                <!-- MacOS: Needs a Maven assembly for MacOS and then the disk image script -->
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>3.3.0</version>
+                        <executions>
+                            <execution>
+                                <id>build-dist-macos</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <descriptors>
+                                        <descriptor>src/main/java/assembly/distribution-macos.xml</descriptor>
+                                    </descriptors>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <!-- Disk image for MacOS -->
+                        <groupId>org.codehaus.mojo</groupId>
+                        <!--suppress MavenModelInspection -->
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <!--suppress MavenModelInspection -->
+                        <version>3.5.0</version>
+                        <executions>
+                            <execution>
+                                <id>create-dmg</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>bash</executable>
+                                    <arguments>
+                                        <argument>${project.basedir}/macos-disk-image.sh</argument>
+                                        <argument>Kintsugi 3D Builder ${project.version}</argument>
+                                        <argument>${project.build.directory}</argument>
+                                        <argument>${project.build.directory}/${project.artifactId}-${project.version}-distribution-macos.zip</argument>
+                                        <argument>${project.build.directory}/${project.artifactId}-${project.version}</argument>
+                                        <argument>${project.build.directory}/${release-basename}-${project.version}-macos.dmg</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                            <execution>
+                                <!-- Workaround to run tests on MacOS -->
+                                <id>run-tests-macos</id>
+                                <phase>test</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <skip>${skipTests}</skip>
+                                    <executable>${java.home}/bin/java</executable>
+                                    <workingDirectory>${maven.multiModuleProjectDirectory}</workingDirectory>
+                                    <classpathScope>test</classpathScope>
+                                    <arguments>
+                                        <argument>-XstartOnFirstThread</argument>
+                                        <argument>-Djava.awt.headless=true</argument>
+                                        <argument>-classpath</argument>
+                                        <classpath/>
+                                        <argument>kintsugi3d.app.test.MainThreadRenderingTestRunner</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <!-- Surefire can't be used to run JUnit tests on MacOS,
+                        since MacOS requires OpenGL to be on the first thread.
+                        Need to explicitly skip tests on MacOS otherwise they run by default. -->
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>3.5.6</version>
+                        <configuration>
+                            <skipTests>true</skipTests>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>windows</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                    <arch>amd64</arch>
+                </os>
+            </activation>
+            <build>
+                <!-- Windows: Needs Launch4J, a Maven assembly for Windows, and NSIS installer -->
+                <plugins>
+                    <plugin>
+                        <!--suppress MavenModelInspection -->
+                        <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                        <!--suppress MavenModelInspection -->
+                        <artifactId>launch4j-maven-plugin</artifactId>
+                        <!--suppress MavenModelInspection -->
+                        <version>2.1.2</version>
+                        <executions>
+                            <execution>
+                                <id>l4j-clui</id>
+                                <phase>package</phase>
+                                <goals><goal>launch4j</goal></goals>
+                                <configuration>
+                                    <headerType>gui</headerType>
+                                    <outfile>${project.build.directory}/${release-basename}.exe</outfile>
+                                    <jar>${project.build.directory}/${project.artifactId}-${project.version}-shaded.jar</jar>
+                                    <icon>${project.basedir}/Kintsugi3D.ico</icon>
+                                    <downloadUrl>https://adoptium.net/temurin/releases/?version=11</downloadUrl>
+                                    <chdir>.</chdir>
+                                    <stayAlive>true</stayAlive>
+                                    <jre>
+                                        <path>jre;%JAVA_HOME%;%PATH%</path>
+                                        <minVersion>11.0.0</minVersion>
+                                        <maxVersion>11.99.99</maxVersion>
+                                    </jre>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>3.3.0</version>
+                        <executions>
+                            <execution>
+                                <id>build-dist-zip</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <configuration>
+                                    <descriptors>
+                                        <descriptor>src/main/java/assembly/distribution.xml</descriptor>
+                                    </descriptors>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- Unzip the distribution.zip for bundling into the NSIS installer -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.1.0</version>
+                        <executions>
+                            <execution>
+                                <id>unpack-distribution</id>
+                                <phase>install</phase>
+                                <goals>
+                                    <goal>run</goal>
+                                </goals>
+                                <configuration>
+                                    <target>
+                                        <unzip
+                                                src="${project.build.directory}/${project.artifactId}-${project.version}-distribution.zip"
+                                                dest="${project.build.directory}/distribution">
+                                            <cutdirsmapper dirs="1"/>
+                                        </unzip>
+                                    </target>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <!--suppress MavenModelInspection -->
+                        <groupId>org.digitalmediaserver</groupId>
+                        <!--suppress MavenModelInspection -->
+                        <artifactId>nsis-maven-plugin</artifactId>
+                        <!--suppress MavenModelInspection -->
+                        <version>1.0.3</version>
+                        <configuration>
+                            <injectHeaderFile>true</injectHeaderFile>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>build-windows-installer</id>
+                                <phase>install</phase>
+                                <configuration>
+                                    <scriptFile>${project.basedir}/installer.nsi</scriptFile>
+                                    <outputFile>${release-basename}-${project.version}-setup.exe</outputFile>
+                                </configuration>
+                                <goals>
+                                    <goal>generate-headerfile</goal>
+                                    <goal>make</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+    <dependencies>
+        <dependency>
+            <groupId>Kintsugi3D</groupId>
+            <artifactId>builder</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>Kintsugi3D</groupId>
+            <artifactId>fx</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>Kintsugi3D</groupId>
+            <artifactId>gl</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>Kintsugi3D</groupId>
+            <artifactId>render-export</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+    </dependencies>
+</project>

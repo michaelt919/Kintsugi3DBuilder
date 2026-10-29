@@ -1,0 +1,47 @@
+Kintsugi 3D Builder
+Version: ${project.version}
+Originally written by:
+Kaelie Tetzlaff (University of Minnesota / UW-Stout Polytechnic) - lead developer and researcher
+Darcy Magda Hannen (UW-Stout Polytechnic) - UX designer and researcher
+Chloe Ferguson  (UW-Stout Polytechnic) - UX designer and researcher
+Seth Berrier (UW-Stout Polytechnic) - contributor
+Alex Kautz (University of Rochester) - contributor
+Michael Ludwig (University of Minnesota) - contributor
+Sam Steinkamp (University of Minnesota) - contributor
+Tyler Betanski (UW-Stout Polytechnic) - contributor
+Jacob Buelow (UW-Stout Polytechnic) - contributor
+Luke Denney (UW-Stout Polytechnic) - contributor
+Ian Anderson (UW-Stout Polytechnic) - contributor
+Zoe Cuthrell (UW-Stout Polytechnic) - contributor
+Blane Suess (UW-Stout Polytechnic) - contributor
+Isaac Tesch (UW-Stout Polytechnic) - contributor
+Nathaniel Willius (UW-Stout Polytechnic) - contributor
+Atlas Collins (UW-Stout Polytechnic) - contributor
+Kyle Boatwright (UW-Stout Polytechnic) - contributor
+Melissa Kosharek (UW-Stout Polytechnic) - contributor
+Simon Cao (UW-Stout Polytechnic) - contributor
+Seth Kendrick (UW-Stout Polytechnic) - contributor
+Joe Luther (UW-Stout Polytechnic) - contributor
+Jakob Schmucki (UW-Stout Polytechnic) - contributor
+Nathan Sunday (UW-Stout Polytechnic) - contributor
+Joseph O'Connor (UW-Stout Polytechnic) - contributor
+Isabel Smith (UW-Stout Polytechnic) - UX designer
+Elliot Duffy (UW-Stout Polytechnic) - UX designer
+Augusto Freitas (UW-Stout Polytechnic) - UX designer
+Mia Hazen (UW-Stout Polytechnic) - user research
+Luke Jowett (UW-Stout Polytechnic) - user research
+Madison Smith (UW-Stout Polytechnic) - user research
+Gary Meyer (University of Minnesota) - designer and advisor
+
+Copyright (c) Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Seth Kendrick, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor 2026
+Copyright (c) The Regents of the University of Minnesota 2019
+
+Licensed under GPLv3 
+( http://www.gnu.org/licenses/gpl-3.0.html )
+
+Kintsugi 3D Builder is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+
+Kintsugi 3D Builder is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ 
+Requests for source code, comments, or bug reports should be sent to:
+Kaelie Tetzlaff ( tetzlaffm@uwstout.edu )

@@ -1,0 +1,97 @@
+/*
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
+package kintsugi3d.builder.rendering.components.scene.camera;
+
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.rendering.CameraViewport;
+import kintsugi3d.builder.rendering.RenderedComponent;
+import kintsugi3d.builder.rendering.SceneModel;
+import kintsugi3d.builder.rendering.SceneViewportModel;
+import kintsugi3d.builder.rendering.components.lightcalibration.CameraFrustum;
+import kintsugi3d.builder.rendering.components.lightcalibration.CameraVisual;
+import kintsugi3d.builder.rendering.components.snap.ViewSelection;
+import kintsugi3d.builder.rendering.components.snap.ViewSelectionImpl;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.FramebufferObject;
+
+public class CameraWidgetGroup<ContextType extends Context<ContextType>> implements RenderedComponent<ContextType>
+{
+    private View currentView;
+
+    private final ReadonlyImageBasedGraphicsResources<ContextType> resources;
+    private final SceneModel sceneModel;
+
+    private final CameraVisual<ContextType> cameraVisual;
+    private final CameraFrustum<ContextType> cameraFrustum;
+
+    public CameraWidgetGroup(ReadonlyImageBasedGraphicsResources<ContextType> resources,
+                             SceneModel sceneModel, SceneViewportModel sceneViewportModel)
+    {
+        this.resources = resources;
+        this.sceneModel = sceneModel;
+
+        ViewSelection selection = new ViewSelectionImpl(resources.getViewSet(), sceneModel)
+        {
+            @Override
+            public View getSelectedView()
+            {
+                return currentView;
+            }
+        };
+
+        cameraVisual = new CameraVisual<>(resources, sceneViewportModel);
+        cameraVisual.setViewSelection(selection);
+        cameraFrustum = new CameraFrustum<>(resources, sceneViewportModel);
+        cameraFrustum.setViewSelection(selection);
+    }
+
+    @Override
+    public void initialize()
+    {
+        cameraVisual.initialize();
+        cameraFrustum.initialize();
+    }
+
+    @Override
+    public void reloadShaders()
+    {
+        cameraVisual.reloadShaders();
+        cameraFrustum.reloadShaders();
+    }
+
+    @Override
+    public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
+    {
+        if (sceneModel.getSettingsModel().getBoolean("isCameraVisualEnabled"))
+        {
+            // Don't render disabled views so that this can be used to visualize what's enabled
+            for (View view : resources.getViewSet().getEnabledViews())
+            {
+                // Current view is captured by cameraVisual and cameraFrustum so that they know where we are in the loop.
+                // A bit of a hack to get a design that was built for a single frustum to work for rendering multiple.
+                // TODO maybe rework with a dedicated visual and frustum child for each camera?
+                currentView = view;
+
+                cameraVisual.draw(framebuffer, cameraViewport);
+                cameraFrustum.draw(framebuffer, cameraViewport);
+            }
+        }
+    }
+
+    @Override
+    public void close()
+    {
+        cameraVisual.close();
+        cameraFrustum.close();
+    }
+}

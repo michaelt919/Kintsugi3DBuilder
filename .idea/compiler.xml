@@ -6,13 +6,20 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="Kintsugi3DBuilder" />
+        <module name="app" />
+        <module name="render-export" />
+        <module name="fx" />
+        <module name="sjm-ply" />
+        <module name="util" />
+        <module name="gl" />
+        <module name="optimization" />
+        <module name="builder" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
-      <module name="Kintsugi3DBuilder" options="--add-exports java.desktop/sun.java2d.cmm=ALL-UNNAMED" />
+      <module name="gl" options="--add-exports java.desktop/sun.java2d.cmm=ALL-UNNAMED" />
     </option>
   </component>
 </project>

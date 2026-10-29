@@ -1,0 +1,293 @@
+/*
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
+package kintsugi3d.builder.io;
+
+import kintsugi3d.builder.core.viewset.ReadonlyViewSet;
+import kintsugi3d.builder.core.viewset.View;
+import kintsugi3d.builder.state.settings.ReadonlyGeneralSettingsModel.Setting;
+import kintsugi3d.gl.vecmath.Matrix3;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector3;
+
+import java.io.File;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.text.MessageFormat;
+import java.util.List;
+
+public final class ViewSetWriterToVSET implements ViewSetWriter
+{
+    private static final ViewSetWriter INSTANCE = new ViewSetWriterToVSET();
+
+    public static ViewSetWriter getInstance()
+    {
+        return INSTANCE;
+    }
+
+    private ViewSetWriterToVSET()
+    {
+    }
+
+    public static void writePoseMatrix(View view, PrintStream out)
+    {
+        Matrix4 pose = view.getCameraPose();
+
+        // TODO validate quaternion computation
+//            Matrix3 rot = new Matrix3(pose);
+//            if (rot.determinant() == 1.0f)
+//            {
+//                // No scale - use quaternion
+//                Vector4 quat = rot.toQuaternion();
+//                Vector4 loc = pose.getColumn(3);
+//                out.printf("p\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\n",
+//                            loc.x, loc.y, loc.z, quat.x, quat.y, quat.z, quat.w);
+//            }
+//            else
+        //{
+        // Write a general 4x4 matrix
+        out.printf("P\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
+            pose.get(0, 0), pose.get(0, 1), pose.get(0, 2), pose.get(0, 3),
+            pose.get(1, 0), pose.get(1, 1), pose.get(1, 2), pose.get(1, 3),
+            pose.get(2, 0), pose.get(2, 1), pose.get(2, 2), pose.get(2, 3),
+            pose.get(3, 0), pose.get(3, 1), pose.get(3, 2), pose.get(3, 3));
+        //}
+        out.println();
+    }
+
+    private static void writeView(View view, int viewIndex, PrintStream out)
+    {
+        String identifier = view.isEnabled() ? "v" : "vd";
+        out.printf("%s\t%d\t%d\t%d\t%s", identifier, viewIndex,
+            view.getCameraProjectionIndex(), view.getLightIndex(), view.getImageFile());
+        out.println();
+    }
+
+    @Override
+    public void writeToStream(ReadonlyViewSet viewSet, OutputStream outputStream)
+    {
+        PrintStream out = new PrintStream(outputStream, false, StandardCharsets.UTF_8);
+        out.println("# Created by Kintsugi 3D Builder");
+
+        out.println();
+        out.println("# ViewSet UUID");
+        out.printf("U %s%n", viewSet.getUUID());
+
+        if (viewSet.getGeometryFileName() != null)
+        {
+            out.println();
+            out.println("# Geometry file name (mesh)");
+            out.printf("m %s%n", viewSet.getGeometryFileName());
+        }
+
+        out.println();
+        out.println("# Full resolution image file path");
+        out.printf("I %s%n", viewSet.getRelativeFullResImagePathName());
+
+        out.println();
+        out.println("# Preview resolution image file path");
+        out.printf("i %s%n", viewSet.getPreviewImageDirectory().getAbsolutePath());
+
+        out.println();
+        out.println("# Supporting files (texture fit results) file path");
+        out.printf("t %s%n", viewSet.getRelativeSupportingFilesPathName());
+
+        out.println();
+        out.println("# Estimated near and far planes");
+        out.printf("c\t%.8f\t%.8f", viewSet.getRecommendedNearPlane(), viewSet.getRecommendedFarPlane());
+        out.println();
+
+        View primaryView = viewSet.getPrimaryView();
+        View orientationView = viewSet.getOrientationView();
+
+        // getViewsSorted returns a copy.
+        // Want views sorted by original GPU index to preserve the original order when the view set was loaded.
+        List<View> viewsCopy = viewSet.getViewsSorted();
+
+        int primaryViewIndex, orientationViewIndex;
+
+        if (primaryView != null)
+        {
+            primaryViewIndex = viewsCopy.indexOf(primaryView);
+        }
+        else
+        {
+            primaryViewIndex = -1;
+        }
+
+        if (orientationView != null)
+        {
+            orientationViewIndex = viewsCopy.indexOf(orientationView);
+        }
+        else
+        {
+            orientationViewIndex = -1;
+        }
+
+        // Correct for the primary view selection index being moved to 0 when written to the vset file
+        int correctedOrientationViewIndex = orientationViewIndex;
+        if (orientationViewIndex >= 0)
+        {
+            if (primaryViewIndex == correctedOrientationViewIndex)
+            {
+                correctedOrientationViewIndex = 0;
+            }
+            else if (primaryViewIndex > correctedOrientationViewIndex)
+            {
+                correctedOrientationViewIndex += 1;
+            }
+        }
+
+        out.println();
+        out.println("# Reference orientation view index");
+        out.printf("O %d%n", correctedOrientationViewIndex);
+        out.println();
+
+        out.println("# Reference View Pose Rotation (degrees)");
+        out.printf("r %s%n", viewSet.getOrientationViewRotationDegrees());
+        out.println();
+
+        Matrix3 orientation = viewSet.getOrientationMatrix();
+        if (orientation != null)
+        {
+            out.println("# Orientation matrix");
+            out.printf("or\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f",
+                orientation.get(0, 0), orientation.get(0, 1), orientation.get(0, 2),
+                orientation.get(1, 0), orientation.get(1, 1), orientation.get(1, 2),
+                orientation.get(2, 0), orientation.get(2, 1), orientation.get(2, 2));
+            out.println();
+        }
+
+        Vector3 objectTranslation = viewSet.getObjectTranslation();
+        if (objectTranslation != null)
+        {
+            out.println("# Object translation");
+            out.printf("ot\t%.8f\t%.8f\t%.8f", objectTranslation.x, objectTranslation.y, objectTranslation.z);
+            out.println();
+        }
+
+        out.println("# Object scale");
+        out.printf("os\t%.8f", viewSet.getObjectScale());
+
+        boolean firstSetting = true;
+        for (Setting setting : viewSet.getProjectSettings())
+        {
+            if (firstSetting) // print only for the first setting; do not print at all if no settings
+            {
+                out.println();
+                out.println("# Additional settings");
+                firstSetting = false;
+            }
+
+            out.print("z ");
+            out.print(setting.getName());
+            out.print(' ');
+            out.println(setting.getValue());
+        }
+
+        if (!viewSet.getResourceMap().isEmpty())
+        {
+            out.println();
+            out.println("# Resource files");
+
+            for (var resource : viewSet.getResourceMap().entrySet())
+            {
+                out.print("zr ");
+                out.print(resource.getKey());
+                out.print(' ');
+                out.println(resource.getValue());
+            }
+        }
+
+        if (viewSet.hasMasks())
+        {
+            out.println();
+            out.println("# Masks directory");
+            out.printf("M %s%n", viewSet.getRelativeMaskPathName());
+
+            out.println();
+            out.printf("# %d masks%n", viewsCopy.stream().filter(view -> view.getMaskFile() != null).count());
+            for (int i = 0; i < viewsCopy.size(); i++)
+            {
+                File maskFile = viewsCopy.get(i).getMaskFile();
+                if (maskFile != null)
+                {
+                    out.println(MessageFormat.format("k\t{0}\t{1}", i, maskFile.getName()));
+                }
+            }
+        }
+
+        out.println();
+        out.printf("# %d%s%n", viewSet.getCameraProjectionCount(), viewSet.getCameraProjectionCount() == 1 ? " Sensor" : " Sensors");
+        for (int i = 0; i < viewSet.getCameraProjectionCount(); i++)
+        {
+            out.println(viewSet.getCameraProjection(i).toVSETString());
+        }
+
+        if (viewSet.hasCustomLuminanceEncoding())
+        {
+            out.println();
+            out.println("# Luminance encoding: Munsell 2/3.5/5.6.5/8/9.5");
+            out.println("#\tCIE-Y/100\tEncoded");
+
+            double[] linearLuminanceValues = viewSet.getLinearLuminanceValues();
+            byte[] encodedLuminanceValues = viewSet.getEncodedLuminanceValues();
+
+            for (int i = 0; i < linearLuminanceValues.length && i < encodedLuminanceValues.length; i++)
+            {
+                out.printf("e\t%.8f\t\t%3d", linearLuminanceValues[i], 0x00FF & encodedLuminanceValues[i]);
+                out.println();
+            }
+        }
+
+        out.println();
+        out.printf("# %d%s%n", viewsCopy.size(), viewsCopy.size() == 1 ? " Camera" : " Cameras");
+
+        // Enabled photos
+        for (View view : viewsCopy)
+        {
+            writePoseMatrix(view, out);
+        }
+
+        if (viewSet.getLightCount() > 0)
+        {
+            out.println();
+            out.printf("# %d%s%n", viewSet.getLightCount(), viewSet.getLightCount() == 1 ? " Light" : " Lights");
+            for (int id = 0; id < viewSet.getLightCount(); id++)
+            {
+                Vector3 pos = viewSet.getLightPosition(id);
+                Vector3 intensity = viewSet.getLightIntensity(id);
+                out.printf("l\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f\t%.8f", pos.x, pos.y, pos.z, intensity.x, intensity.y, intensity.z);
+                out.println();
+            }
+        }
+
+        out.println();
+        out.printf("# %d%s%n", viewsCopy.size(), viewsCopy.size() == 1 ? " View" : " Views");
+
+        if (primaryViewIndex >= 0)
+        {
+            // Primary view first (so that next time the view set is loaded it will be index 0)
+            writeView(primaryView, primaryViewIndex, out);
+        }
+
+        for (int i = 0; i < viewsCopy.size(); i++)
+        {
+            if (i != primaryViewIndex)
+            {
+                writeView(viewsCopy.get(i), i, out);
+            }
+        }
+
+        out.close();
+    }
+}

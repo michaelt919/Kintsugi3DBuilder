@@ -1,0 +1,163 @@
+/*
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
+package kintsugi3d.builder.rendering;
+
+import kintsugi3d.gl.interactive.ProgressMonitor;
+import kintsugi3d.gl.interactive.UserCancellationException;
+import kintsugi3d.gl.vecmath.Vector3;
+
+class BackendProgressMonitor implements ProgressMonitor
+{
+    private final ImageBasedRenderable<?> instance;
+    private final ProgressMonitor base;
+
+    BackendProgressMonitor(ImageBasedRenderable<?> instance, ProgressMonitor base)
+    {
+        this.instance = instance;
+        this.base = base;
+    }
+
+    @Override
+    public void allowUserCancellation() throws UserCancellationException
+    {
+        if (base != null)
+        {
+            base.allowUserCancellation();
+        }
+    }
+
+    @Override
+    public void cancelComplete(UserCancellationException e)
+    {
+        if (base != null)
+        {
+            base.cancelComplete(e);
+        }
+    }
+
+    @Override
+    public void start()
+    {
+        if (base != null)
+        {
+            base.start();
+        }
+    }
+
+    @Override
+    public void setProcessName(String processName)
+    {
+        if (base != null)
+        {
+            base.setProcessName(processName);
+        }
+    }
+
+    @Override
+    public void setStageCount(int count)
+    {
+        if (base != null)
+        {
+            // Add one for the preview image generation step already completed.
+            base.setStageCount(count + 1);
+        }
+    }
+
+    @Override
+    public void setStage(int stage, String message)
+    {
+        if (base != null)
+        {
+            // Add one for the preview image generation step already completed.
+            base.setStage(stage + 1, message);
+        }
+    }
+
+    @Override
+    public void advanceStage(String message)
+    {
+        if (base != null)
+        {
+            // Add one for the preview image generation step already completed.
+            base.advanceStage(message);
+        }
+    }
+
+    @Override
+    public void setMaxProgress(double maxProgress)
+    {
+        if (base != null)
+        {
+            base.setMaxProgress(maxProgress);
+        }
+    }
+
+    @Override
+    public void setProgress(double progress, String message)
+    {
+        if (base != null)
+        {
+            base.setProgress(progress, message);
+        }
+    }
+
+    @Override
+    public void complete()
+    {
+        // Zero vector signals that the light requires calibration.
+        // TODO support multiple light sources.
+        if (Vector3.ZERO.equals(instance.getViewSet().getLightIntensity(0)))
+        {
+            instance.getResources().calibrateLightIntensities();
+        }
+
+        instance.reloadShaders();
+
+        if (base != null)
+        {
+            base.complete();
+        }
+    }
+
+    private boolean isProcessed()
+    {
+        return instance.getResources().getTextureResources().getBasisWeightResources() != null;
+    }
+
+    @Override
+    public void fail(Throwable e)
+    {
+        if (base != null)
+        {
+            base.fail(e);
+        }
+    }
+
+    @Override
+    public void warn(Throwable e)
+    {
+        if (base != null)
+        {
+            base.warn(e);
+        }
+    }
+
+    @Override
+    public boolean isConflictingProcess()
+    {
+        if (base == null)
+        {
+            return false;
+        }
+        return base.isConflictingProcess();
+    }
+}
