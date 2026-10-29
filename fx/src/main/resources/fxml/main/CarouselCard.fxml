@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+
+<!--
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.shape.SVGPath?>
+<AnchorPane fx:id = "carouselCard"
+            prefHeight="160.0"
+            prefWidth="210"
+            minHeight = "-Infinity"
+            minWidth = "-Infinity"
+            style = "-fx-background-color: #3C3C3C;"
+            xmlns="http://javafx.com/javafx/17.0.12"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="kintsugi3d.fx.controllers.sidebar.CarouselCardController"
+            onMouseEntered="#showMoveButtons"
+            onMouseExited="#hideMoveButtons">
+    <fx:include fx:id="framebufferView" source="FramebufferView.fxml" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0"/>
+    <Button fx:id = "closeButton"
+            onAction = "#closeCard"
+            prefHeight="20.0"
+            prefWidth="20"
+            minHeight="20"
+            maxHeight="20"
+            minWidth="20"
+            maxWidth="20"
+            AnchorPane.topAnchor="5"
+            AnchorPane.rightAnchor="5"
+            text = "x"
+            style = "-fx-background-color: #A1A1A1; -fx-font-size: 12px; -fx-padding: 0px; -fx-text-fill: black; -fx-alignment: center;">
+    </Button>
+    <HBox fx:id = "buttonBox" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" visible = "false">
+        <Button fx:id = "moveLeft" minHeight = "50" maxHeight = "50" style = "-fx-padding: 3px; -fx-background-color: #202020" opacity=".75" onAction="#moveCarouselCardLeft">
+            <graphic>
+                <SVGPath content="M12,5 L5,20 L12,35"
+                         stroke="lightgrey" strokeWidth="4.0"
+                         strokeLineCap="ROUND"
+                         strokeLineJoin="ROUND"
+                         fill="TRANSPARENT" />
+            </graphic>
+        </Button>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id = "moveRight" minHeight = "50" maxHeight = "50" style = " -fx-padding: 3px; -fx-background-color: #202020" opacity=".75" onAction="#moveCarouselCardRight">
+            <graphic>
+                <SVGPath content="M5,5 L12,20 L5,35"
+                         stroke="lightgrey" strokeWidth="4.0"
+                         strokeLineCap="ROUND"
+                         strokeLineJoin="ROUND"
+                         fill="TRANSPARENT" />
+            </graphic>
+        </Button>
+    </HBox>
+    <HBox   prefHeight="30"
+            minHeight="30"
+            maxHeight="30"
+            alignment="CENTER_LEFT"
+            style="-fx-background-color: rgba(60, 60, 60, 0.75); -fx-padding: 10px;"
+            AnchorPane.leftAnchor="2.0"
+            AnchorPane.rightAnchor="2.0"
+            AnchorPane.bottomAnchor="2.0">
+        <!--
+        If added to style for Hbox, makes a selection boarder
+        -fx-border-color: #dcdcdc; -fx-border-width: 1; -fx-border-style: solid;
+        -->
+        <Label  fx:id="shaderName"
+                text="Texture Type"
+                style="-fx-text-fill: #ffffff; -fx-font-size: 12px; -fx-alignment: center-left;"/>
+
+        <Region HBox.hgrow="ALWAYS"/>
+
+        <CheckBox   fx:id="selectedCheckbox"
+                    onAction="#selectedChanged"
+                    style="-fx-alignment: center-right; -fx-padding: 0px"/>
+    </HBox>
+</AnchorPane>

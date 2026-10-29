@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019 - 2025 Seth Berrier, Michael Tetzlaff, Jacob Buelow, Luke Denney, Atlas Collins
+ * Copyright (c) 2019 - 2025 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Atlas Collins
  * Copyright (c) 2019 The Regents of the University of Minnesota
  *
  * Licensed under GPLv3

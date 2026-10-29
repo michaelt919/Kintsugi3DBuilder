@@ -1,0 +1,118 @@
+/*
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
+package kintsugi3d.builder.rendering.components.lightcalibration;
+
+import kintsugi3d.builder.rendering.CameraViewport;
+import kintsugi3d.builder.rendering.SceneModel;
+import kintsugi3d.builder.rendering.SceneViewportModel;
+import kintsugi3d.builder.rendering.components.RenderingSubject;
+import kintsugi3d.builder.rendering.components.snap.ViewSnapContent;
+import kintsugi3d.builder.resources.project.ReadonlyImageBasedGraphicsResources;
+import kintsugi3d.gl.core.Context;
+import kintsugi3d.gl.core.FramebufferObject;
+import kintsugi3d.gl.core.UniformBuffer;
+import kintsugi3d.gl.nativebuffer.NativeVectorBufferFactory;
+import kintsugi3d.gl.vecmath.Matrix4;
+import kintsugi3d.gl.vecmath.Vector2;
+import kintsugi3d.gl.vecmath.Vector3;
+
+public class LightCalibrationContent <ContextType extends Context<ContextType>> extends ViewSnapContent<ContextType>
+{
+    private final ContextType context;
+    private final ReadonlyImageBasedGraphicsResources<ContextType> resources;
+    private final SceneModel sceneModel;
+    private final SceneViewportModel sceneViewportModel;
+
+    private RenderingSubject<ContextType> renderingSubject;
+
+    public LightCalibrationContent(ReadonlyImageBasedGraphicsResources<ContextType> resources, SceneModel sceneModel,
+                                   SceneViewportModel sceneViewportModel)
+    {
+        this.context = resources.getContext();
+        this.resources = resources;
+        this.sceneModel = sceneModel;
+        this.sceneViewportModel = sceneViewportModel;
+    }
+
+    @Override
+    public void initialize()
+    {
+        // the actual subject for image-based rendering
+        // No lighting resources since light calibration is effectively unlit shading
+        renderingSubject = new RenderingSubject<>(resources, sceneViewportModel, sceneModel, null);
+        renderingSubject.initialize();
+        renderingSubject.setLightCalibrationMode(true);
+    }
+
+    @Override
+    public void reloadShaders()
+    {
+        renderingSubject.reloadShaders();
+    }
+
+    @Override
+    public void update()
+    {
+        renderingSubject.update();
+    }
+
+    @Override
+    public void draw(FramebufferObject<ContextType> framebuffer, CameraViewport cameraViewport)
+    {
+        Vector3 lightPosition = sceneModel.getSettingsModel().get("currentLightCalibration", Vector2.class).asVector3();
+        Matrix4 lightTransform = Matrix4.translate(lightPosition.negated());
+
+        // Only draw the rendering subject for light calibration, no other components like backplate, grid, ground plane, etc.
+
+        // Hole fill color depends on whether in light calibration mode or not.
+        renderingSubject.getProgram().setUniform("holeFillColor", new Vector3(0.5f));
+
+        Matrix4 lightView = lightTransform.times(cameraViewport.getView());
+        Vector3 lightPosWorldSpace = lightView.getUpperLeft3x3().transpose().times(lightView.getColumn(3).getXYZ().negated());
+        Vector3 worldSpaceCamAxis = cameraViewport.getView().getRow(2).getXYZ().normalized().negated(); // camera-space -z axis in world space
+        Vector3 worldSpaceUpAxis = cameraViewport.getView().getRow(1).getXYZ();
+
+        Vector3 targetPosCamSpace = new Vector3(0, 0, cameraViewport.getView().get(2, 3)); // get z-coordinate of world-space origin in cam-space
+        Vector3 targetPosWorldSpace = cameraViewport.getView().getUpperLeft3x3().transpose()
+            .times(targetPosCamSpace.minus(cameraViewport.getView().getColumn(3).getXYZ()));
+
+        Matrix4 lookAt = Matrix4.lookAt(lightPosWorldSpace, targetPosWorldSpace, worldSpaceUpAxis);
+
+        try(UniformBuffer<ContextType> viewIndexBuffer = context.createUniformBuffer())
+        {
+            // TODO byte ordering seems to be OS-dependent when setting up this uniform buffer, or perhaps less tolerant of incomplete GLSL types
+            int selectedCameraViewIndex = sceneModel.getCameraViewListModel().getSelectedView().getGPUViewIndex();
+            viewIndexBuffer.setData(NativeVectorBufferFactory.getInstance()
+                .createFromIntArray(false, 4, 1,
+                    selectedCameraViewIndex, selectedCameraViewIndex, selectedCameraViewIndex, selectedCameraViewIndex));
+            renderingSubject.overrideViewIndexBuffer(viewIndexBuffer);
+
+            // Draw the actual object, without model transformation for light calibration
+            renderingSubject.draw(framebuffer, cameraViewport.copyForView(lookAt));
+        }
+
+        context.flush();
+
+        // Read buffers after rendering just the project's subject
+        sceneViewportModel.refreshBuffers(cameraViewport.getFullProjection(), framebuffer);
+    }
+
+    @Override
+    public void close()
+    {
+        if (renderingSubject != null)
+        {
+            renderingSubject.close();
+            renderingSubject = null;
+        }
+    }
+}
