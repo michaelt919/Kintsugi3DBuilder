@@ -1,0 +1,50 @@
+/*
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
+package kintsugi3d.builder.state.cards;
+
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+
+/**
+ *
+ * @param <T> The backend type that the associated data cards represent.
+ */
+public interface ProjectDataCardFactory<T>
+{
+    default List<? extends Map<String, Runnable>> getGlobalActions()
+    {
+        return List.of();
+    }
+
+    Class<T> getDataClass();
+
+    /**
+     * Creates a single card.
+     * @return
+     */
+    ProjectDataCard createCard(T data);
+
+    /**
+     * Creates all cards from scratch.
+     * @return
+     */
+    List<ProjectDataCard> createAllCards();
+
+    /**
+     * Refreshes cards and overwrites any cards which changed in the card list.
+     * @param mutableCardList Must be modifiable on the thread from which this method is called.
+     * @param refreshedData
+     * @return
+     */
+    void refreshCards(List<ProjectDataCard> mutableCardList, Function<ProjectDataCard, T> refreshedData);
+}

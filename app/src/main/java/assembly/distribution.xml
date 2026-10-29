@@ -1,0 +1,62 @@
+<!--
+  ~ Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
+  ~ Copyright (c) 2019 The Regents of the University of Minnesota
+  ~
+  ~ Licensed under GPLv3
+  ~ ( http://www.gnu.org/licenses/gpl-3.0.html )
+  ~
+  ~ This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+  ~ This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+  -->
+
+<assembly xmlns="http://maven.apache.org/ASSEMBLY/2.2.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/ASSEMBLY/2.2.0 http://maven.apache.org/xsd/assembly-2.2.0.xsd">
+    <id>distribution</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <files>
+        <file>
+            <source>${project.basedir}/Kintsugi3D.ico</source>
+            <outputDirectory></outputDirectory>
+        </file>
+        <file>
+            <source>${maven.multiModuleProjectDirectory}/Kintsugi3D-icon.png</source>
+            <outputDirectory></outputDirectory>
+        </file>
+        <file>
+            <source>${project.build.directory}/classes/kintsugi3d-builder-about.txt</source>
+            <outputDirectory></outputDirectory>
+        </file>
+        <file>
+            <source>${project.build.directory}/classes/render-exports.txt</source>
+            <outputDirectory></outputDirectory>
+        </file>
+        <file>
+            <source>${project.build.directory}/Kintsugi3DBuilder.exe</source>
+            <outputDirectory></outputDirectory>
+        </file>
+    </files>
+    <fileSets>
+        <fileSet>
+            <directory>${maven.multiModuleProjectDirectory}/shaders</directory>
+            <outputDirectory>shaders</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${project.build.directory}/jre</directory>
+            <outputDirectory>jre</outputDirectory>
+        </fileSet>
+        <fileSet>
+            <directory>${maven.multiModuleProjectDirectory}/bin</directory>
+            <outputDirectory>bin</outputDirectory>
+            <includes>
+                <include>**/*windows.exe</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <directory>${maven.multiModuleProjectDirectory}/scripts</directory>
+            <outputDirectory>scripts</outputDirectory>
+        </fileSet>
+    </fileSets>
+</assembly>

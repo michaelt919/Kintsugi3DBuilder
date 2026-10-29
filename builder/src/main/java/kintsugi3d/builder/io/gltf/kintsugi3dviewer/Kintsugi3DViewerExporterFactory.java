@@ -1,0 +1,37 @@
+/*
+ * Copyright (c) 2019 - 2026 Seth Berrier, Kaelie Tetzlaff, Jacob Buelow, Luke Denney, Ian Anderson, Zoe Cuthrell, Blane Suess, Isaac Tesch, Nathaniel Willius, Atlas Collins, Simon Cao, Joe Luther, Jakob Schmucki, Nathan Sunday, Joseph O'Connor
+ * Copyright (c) 2019 The Regents of the University of Minnesota
+ *
+ * Licensed under GPLv3
+ * ( http://www.gnu.org/licenses/gpl-3.0.html )
+ *
+ * This code is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
+ * This code is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+ */
+
+package kintsugi3d.builder.io.gltf.kintsugi3dviewer;
+
+import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
+import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
+
+public final class Kintsugi3DViewerExporterFactory implements MaterialExporterFactory
+{
+    private static final Kintsugi3DViewerExporterFactory INSTANCE = new Kintsugi3DViewerExporterFactory();
+    
+    public static Kintsugi3DViewerExporterFactory getInstance()
+    {
+        return INSTANCE;
+    }
+    
+    private Kintsugi3DViewerExporterFactory()
+    {
+    }
+    
+    @Override
+    public Kintsugi3DViewerExporter getExporter(ReadonlyTextureResources<? extends kintsugi3d.gl.core.Context<?>> resources)
+    {
+        Kintsugi3DViewerExporter exporter = new Kintsugi3DViewerExporter();
+        exporter.setTextureResources(resources);
+        return exporter;
+    }
+}
