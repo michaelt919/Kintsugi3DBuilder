@@ -74,7 +74,7 @@ jobs:
             exit 1
           fi
           
-          echo "Found OSMesa - $OSMESA"
+          echo "Found OSMesa: $OSMESA"
           ls -l "$OSMESA"
             
           # Make OSMesa and sibling DLLs available to subsequent steps.
@@ -153,7 +153,7 @@ jobs:
           meson compile -C "$MESA_SRC/build"
           meson install -C "$MESA_SRC/build"
           
-          echo "Installed OSMesa libraries..."
+          echo "Installed OSMesa libraries:"
           find "$MESA_PREFIX" -name 'libOSMesa*.dylib' -print
 
       - name: Save OSMesa cache
@@ -179,7 +179,7 @@ jobs:
             exit 1
           fi
         
-          echo "OSMesa library - $OSMESA_LIB"
+          echo "OSMesa library: $OSMESA_LIB"
           otool -L "$OSMESA_LIB"
           
           # GLFW's macOS loader looks for this specific library name.
@@ -253,8 +253,8 @@ jobs:
           echo "$rodinProject"
           echo "$katrinaFullerProject"
         
-          test -f "$rodinProject" || { echo "Rodin test project not found ($rodinProject)"; exit 1; }
-          test -f "$katrinaFullerProject" || { echo "Katrina Fuller test project not found ($katrinaFullerProject)"; exit 1; }
+          test -f "$rodinProject" || { echo "Rodin test project not found: $rodinProject"; exit 1; }
+          test -f "$katrinaFullerProject" || { echo "Katrina Fuller test project not found: $katrinaFullerProject"; exit 1; }
         
           # Launch an executable, display stdout/stderr live, and check for errors.
           test_launch() {
@@ -278,13 +278,13 @@ jobs:
             sleep "$TIMER"
           
             if kill -0 "$PID" 2>/dev/null; then
-              echo "$LABEL - Process remained running after ${TIMER} seconds."
+              echo "$LABEL: Process remained running after ${TIMER} seconds."
               # Kill the whole process tree, including the Java child of Launch4j.
               MSYS_NO_PATHCONV=1 taskkill /F /T /PID "$WINPID" || true
               wait "$PID" 2>/dev/null || true
             else
               if wait "$PID"; then STATUS=0; else STATUS=$?; fi
-              echo "$LABEL - Process exited within ${TIMER} seconds (code $STATUS)."
+              echo "$LABEL: Process exited within ${TIMER} seconds (code $STATUS)."
               cat "$LOG"
               rm -f "$LOG"
               LOG=""
@@ -295,7 +295,7 @@ jobs:
             sleep 1
           
             if [ "$CHECK_ERRORS" = true ] && grep -Eq 'ERROR|Exception in thread "' "$LOG"; then
-              echo "$LABEL - ERROR or uncaught exception found in application output."
+              echo "$LABEL: ERROR or uncaught exception found in application output."
               cat "$LOG"
               rm -f "$LOG"
               LOG=""
@@ -325,7 +325,7 @@ jobs:
               throw "Installer timed out"
             }
           
-            if ($p.ExitCode -ne 0) { throw "Installer failed ($($p.ExitCode))" }
+            if ($p.ExitCode -ne 0) { throw "Installer failed: $($p.ExitCode)" }
             Write-Host "Installer smoke test passed."
           '
           
@@ -354,16 +354,16 @@ jobs:
           # especially when there's no GPU like on GitHub actions.
           test_launch "$VIEWER" "Installed Viewer" 30
           
-#          # Check for any processes still running from the installation directory.
-#          INSTALL_DIR_WIN="$(cygpath -m "$installDir")"
-#          echo $INSTALL_DIR_WIN
-#          powershell.exe -NoProfile -Command '
-#            Get-CimInstance Win32_Process |
-#              Where-Object { $_.ExecutablePath -like "'"$INSTALL_DIR_WIN"\\*" } |
-#              Select-Object ProcessId, Name, ExecutablePath, CommandLine |
-#              Format-Table -AutoSize
-#          '
-#          $echo "No processes still running."
+          ## Check for any processes still running from the installation directory.
+          #INSTALL_DIR_WIN="$(cygpath -m "$installDir")"
+          #echo $INSTALL_DIR_WIN
+          #powershell.exe -NoProfile -Command '
+          #  Get-CimInstance Win32_Process |
+          #    Where-Object { $_.ExecutablePath -like "'"$INSTALL_DIR_WIN"\\*" } |
+          #    Select-Object ProcessId, Name, ExecutablePath, CommandLine |
+          #    Format-Table -AutoSize
+          #'
+          #$echo "No processes still running."
         
           # Test the uninstaller.
           UNINSTALLER="$(find "$installDir" -type f \
@@ -385,7 +385,7 @@ jobs:
               throw "Uninstaller timed out"
             }
           
-            if ($p.ExitCode -ne 0) { throw "Uninstaller failed ($($p.ExitCode))" }
+            if ($p.ExitCode -ne 0) { throw "Uninstaller failed: $($p.ExitCode)" }
             Write-Host "Uninstaller smoke test passed."
           '
           
@@ -396,18 +396,18 @@ jobs:
           done
           
           if [ -d "$installDir" ]; then
-            echo "Contents remaining after uninstall..."
+            echo "Contents remaining after uninstall:"
             find "$installDir" -mindepth 1 -print
         
             # Try to delete the files directly to get more debugging details about why the uninstaller failed.
             if rm -rf "$installDir"; then
               echo "Successfully removed installation directory."
             else
-              echo "Failed to remove installation directory ($installDir)"
+              echo "Failed to remove installation directory: $installDir"
             exit 1
             fi
         
-            echo "Uninstaller did not remove installation directory ($installDir)"
+            echo "Uninstaller did not remove installation directory: $installDir"
             exit 1
           fi
         
@@ -476,10 +476,10 @@ jobs:
             CHECK_ERRORS="${5:-false}"
             PROJECT="${6:-}"
 
-            test -d "$APP" || { echo "$LABEL - app bundle not found"; exit 1; }
-            test -x "$EXE" || { echo "$LABEL - executable not found or not executable"; exit 1; }
+            test -d "$APP" || { echo "$LABEL: app bundle not found"; exit 1; }
+            test -x "$EXE" || { echo "$LABEL: executable not found or not executable"; exit 1; }
 
-            # Test 1 - Run the executable directly, piping stdout and stderr to a log file.
+            # Test 1: Run the executable directly, piping stdout and stderr to a log file.
             LOG="$(mktemp)"
             if [ -n "$PROJECT" ]; then
               "$EXE" "$PROJECT" > >(tee "$LOG") 2>&1 &
@@ -494,7 +494,7 @@ jobs:
               wait "$PID" 2>/dev/null || true
             else
               if wait "$PID"; then STATUS=0; else STATUS=$?; fi
-              echo "$LABEL - direct launch failed or exited within ${TIMER} seconds (code $STATUS)."
+              echo "$LABEL: direct launch failed or exited within ${TIMER} seconds (code $STATUS)."
               exit 1
             fi
           
@@ -503,16 +503,16 @@ jobs:
           
             # Check for errors in stdout / stderr.
             if [ "$CHECK_ERRORS" = true ] && grep -Eq 'ERROR|Exception in thread "' "$LOG"; then
-              echo "$LABEL - ERROR or uncaught exception found in application output."
+              echo "$LABEL: ERROR or uncaught exception found in application output."
               cat "$LOG"
               rm -f "$LOG"
               exit 1
             fi
             rm -f "$LOG"
           
-            echo "$LABEL - direct launch smoke test passed."
+            echo "$LABEL: direct launch smoke test passed."
 
-            # Test 2 - Launch as a user would (but doesn't check stderr or stdout for errors).
+            # Test 2: Launch as a user would (but doesn't check stderr or stdout for errors).
             if [ -n "$PROJECT" ]; then
               if "$Gtimeout" --kill-after=5s "${TIMER}s" open -W -n "$APP" --args "$PROJECT"; then
                 STATUS=0
@@ -528,9 +528,9 @@ jobs:
             fi
 
             if [ "$STATUS" -eq 124 ]; then
-              echo "$LABEL - open .app smoke test passed."
+              echo "$LABEL: open .app smoke test passed."
             else
-              echo "$LABEL - open failed or exited within ${TIMER} seconds (code $STATUS)."
+              echo "$LABEL: open failed or exited within ${TIMER} seconds (code $STATUS)."
               exit 1
             fi
           }
@@ -538,7 +538,7 @@ jobs:
           STAGING_DIR="$(find "$BUILD_DIR" -maxdepth 1 -type d \
             -name 'app-*' ! -name '*-macos.dmg' -print -quit)"
 
-          # Test 1 - Builder from the staging directory.
+          # Test 1: Builder from the staging directory.
           BUILDER="$STAGING_DIR/Kintsugi 3D Builder.app"
           echo "$BUILDER"
           smoke_test_app "$BUILDER" \
@@ -553,7 +553,7 @@ jobs:
             "Builder (build directory)" \
             300 true "$katrinaFullerProject"
 
-          # Test 2 - Builder extracted from the DMG.
+          # Test 2: Builder extracted from the DMG.
           BUILDER_EXTRACTED="$EXTRACT_DIR/Kintsugi 3D Builder.app"
           echo "$BUILDER_EXTRACTED"
           smoke_test_app "$BUILDER_EXTRACTED" \
@@ -568,7 +568,7 @@ jobs:
             "Builder (DMG)" \
             300 true "$katrinaFullerProject"
 
-          # Test 3 - Viewer extracted from the DMG
+          # Test 3: Viewer extracted from the DMG
           # Intentionally omit checking for errors since Godot has a tendency to spam errors 
           # especially when there's no GPU like on GitHub actions.
           VIEWER_EXTRACTED="$EXTRACT_DIR/Kintsugi 3D Viewer.app"
