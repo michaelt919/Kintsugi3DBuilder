@@ -366,8 +366,8 @@ jobs:
           #$echo "No processes still running."
         
           # Test the uninstaller.
-          UNINSTALLER="$(find "$installDir" -type f \
-            -iname 'un*.exe' -print -quit 2>/dev/null || true)"
+          UNINSTALLER="$(find "$installDir" -maxdepth 1 -type f \
+            -iname 'uninstall*.exe' -print -quit 2>/dev/null || true)"
           test -n "$UNINSTALLER" || { echo "Uninstaller not found"; exit 1; }
           echo "$UNINSTALLER"
           
