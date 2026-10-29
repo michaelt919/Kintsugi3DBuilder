@@ -316,10 +316,10 @@ public class JavaFXApplication extends Application
         progressBarsController.init(progressBarsStage);
 
         mainWindowController.init(primaryStage, state,
-            () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
+            () -> getHostServices().showDocument("https://kaelie-tetzlaff.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
 
         welcomeWindowController.init(welcomeStage, state,
-            () -> getHostServices().showDocument("https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
+            () -> getHostServices().showDocument("https://kaelie-tetzlaff.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf"));
 
         // Register JavaFX recent projects helper with the backend recent projects utility class.
         RecentProjects.addRecentProjectsChangedListener(() -> Platform.runLater(RecentProjectsHelper::updateAllControlStructures));

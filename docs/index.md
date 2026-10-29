@@ -1,8 +1,8 @@
 !["Loie Fuller," by Joseph Kratina, from the Minneapolis Institute of Art (2016.33.14), processed in Kintsugi 3D Builder from 168 photographs and rendered in Kintsugi 3D Viewer.](loie-fuller.png)
 
 ## [Mia collection on Sketchfab](https://sketchfab.com/artsmia/collections/specularity-research-project-5aafa22fb2d24675894d043e83d76a69)
-## [Download latest release](https://github.com/michaelt919/Kintsugi3DBuilder/releases/latest)
-## [Documentation](https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf)
+## [Download latest release](https://github.com/kaelie-tetzlaff/Kintsugi3DBuilder/releases/latest)
+## [Documentation](https://kaelie-tetzlaff.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf)
 ## [CHI forums](https://forums.culturalheritageimaging.org/forum/48-kintsugi-3d/)
 
 ## Install instructions:
@@ -29,31 +29,31 @@ In contrast, Kintsugi 3D, like its predecessor IBRelight, uses a photographic te
 
 ## References
 Lou Brown, Charles Walbridge, and Michael Tetzlaff, “Kintsugi 3D: An Empirically-Based Photogrammetry Production Pipeline,” *IS&T Archiving Conference*, 2024, pp. 76-80.<br>
-[PDF](https://michaelt919.github.io/Kintsugi3DBuilder/Archiving2024.pdf)
+[PDF](https://kaelie-tetzlaff.github.io/Kintsugi3DBuilder/Archiving2024.pdf)
 
 Michael Tetzlaff, “High-Fidelity Specular SVBRDF Acquisition from Flash Photographs,” *IEEE Transactions on Visualization and Computer Graphics (TVCG)*, vol. 30, no. 4, 2024, pp. 1885-1896.<br>
 [https://ieeexplore.ieee.org/document/10012127](https://ieeexplore.ieee.org/document/10012127)<br>
-[PDF](https://michaelt919.github.io/Kintsugi3DBuilder/IEEETVCG2023_FinalRevision.pdf)
-[Appendix](https://michaelt919.github.io/Kintsugi3DBuilder/IEEETVCG2023_FinalRevisionAppendix.pdf)<br>
+[PDF](https://kaelie-tetzlaff.github.io/Kintsugi3DBuilder/IEEETVCG2023_FinalRevision.pdf)
+[Appendix](https://kaelie-tetzlaff.github.io/Kintsugi3DBuilder/IEEETVCG2023_FinalRevisionAppendix.pdf)<br>
 1077-2626 © 2023 IEEE. Personal use is permitted, but republication/redistribution requires IEEE permission.<br>
 See [https://www.ieee.org/publications/rights/index.html](https://www.ieee.org/publications/rights/index.html) for more information.
 
 Tyler Garcia, Zhangchi Lyu, and Michael Tetzlaff, “An Online Model Viewer for Cultural Heritage in Unity 3D,” *IS&T Archiving Conference*, 2022, pp. 50-55.<br>
-[PDF](https://michaelt919.github.io/Kintsugi3DBuilder/Archiving2022_FullPaper.pdf)
+[PDF](https://kaelie-tetzlaff.github.io/Kintsugi3DBuilder/Archiving2022_FullPaper.pdf)
 
 Giljoo Nam, Joo Ho Lee, Diego Gutierrez, and Min H. Kim, “Practical SVBRDF Acquisition of 3D Objects with Unstructured Flash Photography,” *ACM Transactions on Graphics*, vol. 37, no. 6, 2018, pp. 267:1-267:12.<br>
 [https://dl.acm.org/doi/10.1145/3272127.3275017](https://dl.acm.org/doi/10.1145/3272127.3275017)
 
 Michael Tetzlaff, Gary Meyer, and Alex Kautz, “IBRelight: An Image-Based 3D Renderer for Cultural Heritage,” *IS&T Archiving Conference*, 2018, pp. 93-98.<br>
-[PDF](https://michaelt919.github.io/Kintsugi3DBuilder/archiving2018.pdf)
+[PDF](https://kaelie-tetzlaff.github.io/Kintsugi3DBuilder/archiving2018.pdf)
 
 
 ## Posters
-[Kintsugi 3D Viewer: User-Centric Design for Cultural Heritage Accessibility (May 2024)](https://michaelt919.github.io/Kintsugi3DBuilder/Research%20Day%202024%20Poster%20-%20KINTSUGI%203D%20VIEWER.pdf)
+[Kintsugi 3D Viewer: User-Centric Design for Cultural Heritage Accessibility (May 2024)](https://kaelie-tetzlaff.github.io/Kintsugi3DBuilder/Research%20Day%202024%20Poster%20-%20KINTSUGI%203D%20VIEWER.pdf)
 
-[Kintsugi 3D Builder: User Experience Design and Implementation (May 2025)](https://michaelt919.github.io/Kintsugi3DBuilder/DenneyKintusgi2025Final.pdf)
+[Kintsugi 3D Builder: User Experience Design and Implementation (May 2025)](https://kaelie-tetzlaff.github.io/Kintsugi3DBuilder/DenneyKintusgi2025Final.pdf)
 
-[User Experience of Visualizing Empirically-Based Textures in Kintsugi 3D Builder (May 2025)](https://michaelt919.github.io/Kintsugi3DBuilder/EmpiricallyBasedTexturesPosterK3D_FergusonSP25.pdf)
+[User Experience of Visualizing Empirically-Based Textures in Kintsugi 3D Builder (May 2025)](https://kaelie-tetzlaff.github.io/Kintsugi3DBuilder/EmpiricallyBasedTexturesPosterK3D_FergusonSP25.pdf)
 
 ## Contributors
 - Michael Tetzlaff (University of Minnesota / UW-Stout Polytechnic) - primary developer

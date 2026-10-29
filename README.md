@@ -1,8 +1,8 @@
 # Kintsugi 3D Builder
 
 ### [Mia collection on Sketchfab](https://sketchfab.com/artsmia/collections/specularity-research-project-5aafa22fb2d24675894d043e83d76a69)
-### [Download latest release](https://github.com/michaelt919/Kintsugi3DBuilder/releases/latest)
-### [Documentation](https://michaelt919.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf)
+### [Download latest release](https://github.com/kaelie-tetzlaff/Kintsugi3DBuilder/releases/latest)
+### [Documentation](https://kaelie-tetzlaff.github.io/Kintsugi3DBuilder/Kintsugi3DDocumentation.pdf)
 ### [CHI forums](https://forums.culturalheritageimaging.org/forum/48-kintsugi-3d/)
 
 !["Loie Fuller," by Joseph Kratina, from the Minneapolis Institute of Art (2016.33.14), processed in Kintsugi 3D Builder from 168 photographs and rendered in Kintsugi 3D Viewer.](docs/loie-fuller.png)
