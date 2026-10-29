@@ -17,7 +17,7 @@ import kintsugi3d.builder.core.viewset.ViewSet;
 import kintsugi3d.builder.fit.decomposition.BasisMaterialInfo;
 import kintsugi3d.builder.io.ReadonlyLoadOptionsModel;
 import kintsugi3d.builder.io.events.ProjectProcessedListener;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.texture.TextureResources;
 import kintsugi3d.builder.util.events.EventListeners;
 import kintsugi3d.builder.util.events.MappedChange;
 import kintsugi3d.builder.util.events.Observer;
