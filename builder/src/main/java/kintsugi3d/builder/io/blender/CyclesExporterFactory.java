@@ -13,7 +13,7 @@ package kintsugi3d.builder.io.blender;
 
 import kintsugi3d.builder.io.gltf.MaterialExporter;
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
-import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
+import kintsugi3d.builder.resources.project.texture.ReadonlyTextureResources;
 
 public final class CyclesExporterFactory implements MaterialExporterFactory
 {

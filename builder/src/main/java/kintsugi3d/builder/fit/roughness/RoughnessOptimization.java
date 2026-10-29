@@ -12,7 +12,7 @@
 package kintsugi3d.builder.fit.roughness;
 
 import kintsugi3d.builder.fit.decomposition.ReadonlyBasisWeightResources;
-import kintsugi3d.builder.resources.project.specular.SpecularTextures;
+import kintsugi3d.builder.resources.project.texture.SpecularTextures;
 import kintsugi3d.gl.core.Context;
 import kintsugi3d.gl.core.ManagedResource;
 

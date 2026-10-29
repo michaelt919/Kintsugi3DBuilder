@@ -13,7 +13,7 @@ package kintsugi3d.builder.fit.settings;
 
 import kintsugi3d.builder.io.gltf.MaterialExporterFactory;
 import kintsugi3d.builder.io.gltf.ModelExporter;
-import kintsugi3d.builder.resources.project.specular.ReadonlyTextureResources;
+import kintsugi3d.builder.resources.project.texture.ReadonlyTextureResources;
 import kintsugi3d.gl.core.Context;
 
 public interface ReadonlyExportSettings

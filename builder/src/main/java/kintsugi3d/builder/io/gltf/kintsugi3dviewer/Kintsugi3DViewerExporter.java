@@ -17,7 +17,7 @@ import kintsugi3d.builder.fit.decomposition.BasisResources;
 import kintsugi3d.builder.io.gltf.CustomTextureExport;
 import kintsugi3d.builder.io.gltf.PBRExporter;
 import kintsugi3d.builder.io.gltf.StandardTextureExport;
-import kintsugi3d.builder.resources.project.specular.TextureResources;
+import kintsugi3d.builder.resources.project.texture.TextureResources;
 
 import java.io.File;
 
