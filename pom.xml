@@ -47,6 +47,10 @@
                 <groupId>com.googlecode.maven-download-plugin</groupId>
                 <artifactId>download-maven-plugin</artifactId>
                 <version>1.13.0</version>
+                <!-- GitHub Actions can time out on downloads if we don't set a generous readTimeOut. -->
+                <configuration>
+                    <readTimeOut>60000</readTimeOut>
+                </configuration>
                 <executions>
                     <!-- Download latest published build of USDZ exporter -->
                     <!-- Put this one in bin rather than in target so that it's also accessible when running in IDE. -->
