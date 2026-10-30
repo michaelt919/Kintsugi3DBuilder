@@ -32,7 +32,7 @@ public class SimpleMaterialBasis implements MutableMaterialBasis
 
     private int enabledMaterialCount;
 
-    SimpleMaterialBasis(DoubleVector3[] diffuseColors, List<double[]> redBasis, List<double[]> greenBasis, List<double[]> blueBasis)
+    public SimpleMaterialBasis(DoubleVector3[] diffuseColors, List<double[]> redBasis, List<double[]> greenBasis, List<double[]> blueBasis)
     {
         this.enabledMaterialCount = redBasis.size();
         this.specularResolution = redBasis.get(0).length - 1;
@@ -179,7 +179,7 @@ public class SimpleMaterialBasis implements MutableMaterialBasis
     @Override
     public void save(File outputDirectory, String filenameOverride)
     {
-        SpecularFitSerializer.serializeBasisFunctions(specularResolution, this, outputDirectory, filenameOverride);
+        SpecularFitSerializer.serializeHDRI(this, outputDirectory, filenameOverride);
     }
 
     /**
